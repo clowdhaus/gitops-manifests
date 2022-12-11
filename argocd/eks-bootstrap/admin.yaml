@@ -5,18 +5,18 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  - git:
-      repoURL: https://github.com/argoproj/argo-cd.git
-      revision: HEAD
-      directories:
-      - path: applicationset/examples/git-generator-directory/cluster-addons/*
+    - git:
+        repoURL: https://github.com/clowdhaus/gitops-manifests.git
+        revision: HEAD
+        directories:
+          - path: argocd/cluster-admin/*
   template:
     metadata:
       name: '{{path.basename}}'
     spec:
-      project: "my-project"
+      project: 'cluster-admin'
       source:
-        repoURL: https://github.com/argoproj/argo-cd.git
+        repoURL: https://github.com/clowdhaus/gitops-manifests.git
         targetRevision: HEAD
         path: '{{path}}'
       destination:
@@ -24,7 +24,7 @@ spec:
         namespace: '{{path.basename}}'
       syncPolicy:
         syncOptions:
-        - CreateNamespace=true
+          - CreateNamespace=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -36,18 +36,4 @@ metadata:
 spec:
   description: Cluster administration tools required on every cluster
   sourceRepos:
-  - '*'
-
-  # Only permit applications to deploy to the guestbook namespace in the same cluster
-  destinations:
-  - namespace: guestbook
-    server: https://kubernetes.default.svc
-
-  roles:
-  # A role which provides read-only access to all applications in the project
-  - name: read-only
-    description: Read-only privileges to my-project
-    policies:
-    - p, proj:my-project:read-only, applications, get, my-project/*, allow
-    groups:
-    - my-oidc-group
+    - https://github.com/clowdhaus/gitops-manifests.git
