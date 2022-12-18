@@ -14,7 +14,7 @@ spec:
     metadata:
       name: '{{path.basename}}'
     spec:
-      project: 'cluster-admin'
+      project: default # cluster-admin
       source:
         repoURL: https://github.com/clowdhaus/gitops-manifests.git
         targetRevision: HEAD
@@ -46,3 +46,6 @@ spec:
   description: Cluster administration tools required on every cluster
   sourceRepos:
     - https://github.com/clowdhaus/gitops-manifests.git
+  clusterResourceWhitelist:
+    - group: ''
+      kind: 'Namespace'
