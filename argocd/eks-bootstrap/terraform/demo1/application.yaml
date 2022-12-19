@@ -1,0 +1,71 @@
+# File created/managed by Terraform. Do not edit; changes will be over-written
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: application
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/clowdhaus/gitops-dev-team-manifests.git
+        revision: HEAD
+        directories:
+          - path: charts/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: application
+      source:
+        repoURL: https://github.com/clowdhaus/gitops-dev-team-manifests.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: application
+      syncPolicy:
+        automated:
+          prune: true
+          allowEmpty: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: application
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Application project for developer use
+  sourceRepos:
+    - https://github.com/clowdhaus/gitops-dev-team-manifests.git
+  # Only permit applications to deploy to the application namespace in the same cluster
+  destinations:
+    - namespace: application
+      server: https://kubernetes.default.svc
+  # Deny all cluster-scoped resources from being created, except for Namespace
+  clusterResourceWhitelist:
+    - group: ''
+      kind: 'Namespace'
+  # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+    - group: ''
+      kind: NetworkPolicy
+  # Deny all namespaced-scoped resources from being created, except for Deployment and StatefulSet
+  namespaceResourceWhitelist:
+    - group: 'apps'
+      kind: Deployment
+    - group: 'apps'
+      kind: StatefulSet
