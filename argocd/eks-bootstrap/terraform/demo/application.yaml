@@ -47,6 +47,25 @@ spec:
   description: Application project for developer use
   sourceRepos:
     - https://github.com/clowdhaus/gitops-dev-team-manifests.git
+  # Only permit applications to deploy to the application namespace in the same cluster
+  destinations:
+    - namespace: application
+      server: https://kubernetes.default.svc
+  # Deny all cluster-scoped resources from being created, except for Namespace
   clusterResourceWhitelist:
     - group: ''
       kind: 'Namespace'
+  # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+    - group: ''
+      kind: NetworkPolicy
+  # Deny all namespaced-scoped resources from being created, except for Deployment and StatefulSet
+  namespaceResourceWhitelist:
+    - group: 'apps'
+      kind: Deployment
+    - group: 'apps'
+      kind: StatefulSet
