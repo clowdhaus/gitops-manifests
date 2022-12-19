@@ -1,0 +1,52 @@
+# File created/managed by Terraform. Do not edit; changes will be over-written
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: application
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/clowdhaus/gitops-manifests.git
+        revision: HEAD
+        directories:
+          - path: argocd/eks-bootstrap/terraform/demo
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: application
+      source:
+        repoURL: https://github.com/clowdhaus/gitops-manifests.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          allowEmpty: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: application
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Application project for developer use
+  sourceRepos:
+    - https://github.com/clowdhaus/gitops-manifests.git
+  clusterResourceWhitelist:
+    - group: ''
+      kind: 'Namespace'
